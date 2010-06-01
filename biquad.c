@@ -186,7 +186,7 @@ void initadc(void)
 	adcinfo.ADC_ContinuousConvMode = DISABLE;
 	adcinfo.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T3_TRGO;
 	// 	adcinfo.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
-	adcinfo.ADC_DataAlign = ADC_DataAlign_Left;
+	adcinfo.ADC_DataAlign = ADC_DataAlign_Right;
 	adcinfo.ADC_NbrOfChannel = 1;
 	
 	// 	void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct);	
