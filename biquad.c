@@ -14,14 +14,19 @@ void inittim6(void);
 void inittim3(void);
 void cfgmco(void);
 void cfgclock(void);
+void initnvic(void);
 
-volatile uint16_t adcbuf;
+volatile int16_t adcbuf;
 volatile uint16_t dacbuf;
 
 BIQUAD_STRUCT * bs;
 
+int32_t adcsigned;
+
 int filtout;
 uint32_t filtscaled;
+
+int newsample = 0;
 
 void main (void) {
 	cfgclock();
@@ -35,6 +40,7 @@ void main (void) {
 	
 	initadc();
 	initadcdma();
+	initnvic();
 	inittim3();
 	
 	cfgmco();
@@ -74,29 +80,63 @@ static int b_coefs[][3] = {
 	
 // 	static int filtout;
 // 	static uint32_t filtscaled;
-
-// 	int16_t adcsigned;
 		
 	bs = init_biquad(num_sections, gain, a_coefs, b_coefs);
 	
 	while (1)
 	{
-// 		adcsigned = adcbuf ^ 0x8000;
+// 		if (newsample)
+// 		{
+// 			//error: overrun
+// 		}
 		
-		filtout = calc_biquad(bs,adcbuf);
+		while (!newsample);
 		
-// 		filtscaled = (filtout + 2147483648); (2^16)/2
+		newsample = 0;
+		
+		adcbuf = adcbuf ^ 0x8000;
+		
+// 		if (adcsigned & 0x8000)
+// 		{
+// 			adcsigned = adcsigned | 0xfffff000;
+// 		} else {
+// 			adcsigned = adcsigned & 0x00000fff;
+// 		}
+		
+		adcsigned = adcbuf;
+		
+		filtout = calc_biquad(bs,adcsigned);
 
 		filtscaled = filtout ^ 0xffff8000;
 		
-// 		filtscaled = adcbuf;
-		
 		dacbuf = filtscaled >> 4;
 		
+		GPIO_SetBits(GPIOC, GPIO_Pin_4);
 	}
 	
 	//never runs
 	destroy_biquad(bs);
+}
+
+void DMA1_Channel1_IRQHandler(void)
+{
+	DMA_ClearITPendingBit(DMA1_IT_TC1);
+// 	TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+	newsample = 1;
+	GPIO_ResetBits(GPIOC, GPIO_Pin_4);
+}
+
+void initnvic(void)
+{
+	NVIC_InitTypeDef nvic;
+	
+	nvic.NVIC_IRQChannel = DMA1_Channel1_IRQn;
+// 	nvic.NVIC_IRQChannel = TIM3_IRQn;
+	nvic.NVIC_IRQChannelPreemptionPriority = 0;
+	nvic.NVIC_IRQChannelSubPriority = 0;
+	nvic.NVIC_IRQChannelCmd = ENABLE;
+	
+	NVIC_Init(&nvic);
 }
 
 void initrcc(void)
@@ -157,6 +197,11 @@ void initgpio(void)
 	
 	//Apply the settings to port c
 	GPIO_Init(GPIOC, &portc);
+	
+	GPIO_SetBits(GPIOC, GPIO_Pin_4 |
+						GPIO_Pin_5 |
+						GPIO_Pin_8 |
+						GPIO_Pin_9);
 }
 
 void initdac(void)
@@ -186,7 +231,7 @@ void initadc(void)
 	adcinfo.ADC_ContinuousConvMode = DISABLE;
 	adcinfo.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T3_TRGO;
 	// 	adcinfo.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
-	adcinfo.ADC_DataAlign = ADC_DataAlign_Right;
+	adcinfo.ADC_DataAlign = ADC_DataAlign_Left;
 	adcinfo.ADC_NbrOfChannel = 1;
 	
 	// 	void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct);	
@@ -233,6 +278,8 @@ void initadcdma(void)
 	dmainfo.DMA_M2M = DMA_M2M_Disable;
 	
 	DMA_Init(DMA1_Channel1, &dmainfo);
+	
+	DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
 	
 	DMA_Cmd(DMA1_Channel1, ENABLE);
 }
@@ -294,6 +341,8 @@ void inittim3(void)
 	TIM_TimeBaseInit(TIM3, &timinfo);
 	
 	TIM_SelectOutputTrigger(TIM3, TIM_TRGOSource_Update);
+	
+// 	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 	
 	TIM_Cmd(TIM3, ENABLE);
 }
