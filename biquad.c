@@ -6,21 +6,7 @@
 BIQUAD_STRUCT * bs;
 
 void main (void) {
-	cfgclock();
-	
-	initrcc();
-	initgpio();
-	
-	initdac();
-	initdacdma();
-	inittim6();
-	
-	initadc();
-	initadcdma();
-	initnvic();
-	inittim3();
-	
-	cfgmco();
+	initialize();
 			
 	static int num_sections = 4;
 
@@ -40,13 +26,11 @@ void main (void) {
 		
 	bs = init_biquad(num_sections, gain, a_coefs, b_coefs);
 	
-	int32_t filtout;
-	
 	while (1)
 	{		
-		filtout = calc_biquad(bs,getsample());
+// 		putsample(calc_biquad(bs,getsample()));
 
-		putsample(filtout);
+		putsample(getsample());
 	}
 	
 	//never runs
