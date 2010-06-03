@@ -21,12 +21,11 @@ volatile uint16_t dacbuf;
 
 BIQUAD_STRUCT * bs;
 
-int32_t adcsigned;
-
 int filtout;
 uint32_t filtscaled;
 
-int newsample = 0;
+volatile int newsample = 0;
+int overrun = 0;
 
 void main (void) {
 	cfgclock();
@@ -61,22 +60,38 @@ void main (void) {
 // 		{16384, -25269, 12688},
 // 		{16384, -9620, 14787} };
 
+// static int num_sections = 4;
+// 
+// static int gain = 21;
+// 
+// static int b_coefs[][3] = {
+// 	{16384, -13242, 16384},
+// 	{16384, -28762, 16384},
+// 	{16384, -30369, 16384},
+// 	{16384, -30721, 16384} };
+// 	
+// 	static int a_coefs[][3] = {
+// 		{16384, -29651, 13535},
+// 		{16384, -30188, 14679},
+// 		{16384, -30668, 15667},
+// 		{16384, -30979, 16200} };
+		
 static int num_sections = 4;
 
-static int gain = 21;
+static int gain = 268;
 
 static int b_coefs[][3] = {
-	{16384, -13242, 16384},
-	{16384, -28762, 16384},
-	{16384, -30369, 16384},
-	{16384, -30721, 16384} };
+	{707, -572, 707},
+	{4435, -7786, 4435},
+	{3090, -5728, 3090},
+	{581570, -1090477, 581570} };
 	
-	static int a_coefs[][3] = {
+static int a_coefs[][3] = {
 		{16384, -29651, 13535},
 		{16384, -30188, 14679},
 		{16384, -30668, 15667},
 		{16384, -30979, 16200} };
-		
+
 	
 // 	static int filtout;
 // 	static uint32_t filtscaled;
@@ -85,10 +100,11 @@ static int b_coefs[][3] = {
 	
 	while (1)
 	{
-// 		if (newsample)
-// 		{
-// 			//error: overrun
-// 		}
+		if (newsample)
+		{
+			//error: overrun
+			overrun++;
+		}
 		
 		while (!newsample);
 		
@@ -96,20 +112,11 @@ static int b_coefs[][3] = {
 		
 		adcbuf = adcbuf ^ 0x8000;
 		
-// 		if (adcsigned & 0x8000)
-// 		{
-// 			adcsigned = adcsigned | 0xfffff000;
-// 		} else {
-// 			adcsigned = adcsigned & 0x00000fff;
-// 		}
-		
-		adcsigned = adcbuf;
-		
-		filtout = calc_biquad(bs,adcsigned);
+		filtout = calc_biquad(bs,adcbuf);
 
 		filtscaled = filtout ^ 0xffff8000;
 		
-		dacbuf = filtscaled >> 4;
+		dacbuf = filtscaled;
 		
 		GPIO_SetBits(GPIOC, GPIO_Pin_4);
 	}
@@ -290,7 +297,7 @@ void initdacdma(void)
 	
 	DMA_InitTypeDef dmainfo;
 	// 	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (DAC_BASE + DHR12R1_Offset);
-	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x40007408);
+	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x4000740C);
 	dmainfo.DMA_MemoryBaseAddr = (uint32_t) &dacbuf;
 	dmainfo.DMA_DIR = DMA_DIR_PeripheralDST;
 	dmainfo.DMA_BufferSize = 1;
