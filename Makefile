@@ -32,8 +32,12 @@ dmasrc = $(stdperiphsrc)/stm32f10x_dma.c
 timsrc = $(stdperiphsrc)/stm32f10x_tim.c
 flashsrc = $(stdperiphsrc)/stm32f10x_flash.c
 
+interface = $(cm3root)/arpinit.c \
+			$(cm3root)/arpint.c \
+			$(cm3root)/arpsample.c
+
 cfiles = $(incdevice)/*.c $(rccsrc) $(gpiosrc) $(miscsrc) $(adcsrc) \
-			$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc)
+			$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc) $(interface)
 
 ccpath = /usr/students/apellett/stm/ctc/bin
 CC = $(ccpath)/arm-eabi-gcc
