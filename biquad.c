@@ -6,6 +6,8 @@
 
 BIQUAD_STRUCT * bs;
 
+int filtout;
+
 void main (void) {
 	initialize();
 			
@@ -30,9 +32,8 @@ void main (void) {
 	while (1)
 	{		
 // 		putsample(calc_biquad(bs,getsample()));
-
+		
 		putsample(getsample());
-		flagerror(0);
 	}
 	
 	//never runs
