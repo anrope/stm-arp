@@ -1,3 +1,9 @@
+#define DACCLK_CNT 1500
+#define ADCCLK_CNT 1500
+
+extern volatile int16_t adcbuf;
+extern volatile uint16_t dacbuf;
+
 void initnvic(void);
 void initrcc(void);
 void initgpio(void);

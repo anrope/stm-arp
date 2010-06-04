@@ -1,11 +1,6 @@
 #include <stm32f10x.h>
 #include "arpinit.h"
-
-#define DACCLK_CNT 1500
-#define ADCCLK_CNT 1500
-
-extern volatile int16_t adcbuf;
-extern volatile uint16_t dacbuf;
+#include "arperr.h"
 
 void initnvic(void)
 {
@@ -275,6 +270,7 @@ void cfgclock(void)
 	if (RCC_WaitForHSEStartUp() == ERROR)
 	{
 		//hse didn't start up :(
+		flagerror(HSE_START_FAIL);
 	} else {
 		//hse started up
 		
@@ -338,6 +334,8 @@ void cfgclock(void)
 
 void initialize(void)
 {
+	initerror();
+	
 	cfgclock();
 	
 	initrcc();

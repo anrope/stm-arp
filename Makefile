@@ -32,12 +32,13 @@ dmasrc = $(stdperiphsrc)/stm32f10x_dma.c
 timsrc = $(stdperiphsrc)/stm32f10x_tim.c
 flashsrc = $(stdperiphsrc)/stm32f10x_flash.c
 
-interface = $(cm3root)/arpinit.c \
+arpitf = $(cm3root)/arpinit.c \
 			$(cm3root)/arpint.c \
-			$(cm3root)/arpsample.c
+			$(cm3root)/arpsample.c \
+			$(cm3root)/arperr.c
 
 cfiles = $(incdevice)/*.c $(rccsrc) $(gpiosrc) $(miscsrc) $(adcsrc) \
-			$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc) $(interface)
+			$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc) $(arpitf)
 
 ccpath = /usr/students/apellett/stm/ctc/bin
 CC = $(ccpath)/arm-eabi-gcc
@@ -46,27 +47,27 @@ CFLAGS = -march=armv7-m -mthumb
 
 arpld = -T arp.ld
 
-mainc : $(csource) stm32f10x_conf.h
+mainc : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(mainc) $(startupscript) -o arp.eabi
 	
-biquad : $(csource) stm32f10x_conf.h
+biquad : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(biquad) $(startupscript) -o arp.eabi
 	
-adccal : $(csource) stm32f10x_conf.h
+adccal : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(adccal) $(startupscript) -o arp.eabi
 	
-daccal : $(csource) stm32f10x_conf.h
+daccal : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(daccal) $(startupscript) -o arp.eabi
 	
-blink : $(csource) stm32f10x_conf.h
+blink : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(blink) $(startupscript) -o arp.eabi
 	
-main-all-libs : $(csource) stm32f10x_conf.h
+main-all-libs : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(stdperiphsrc)/*.c $(startupscript) -o arp.eabi.alllibs
 

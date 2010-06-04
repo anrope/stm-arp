@@ -1,6 +1,7 @@
 #include <stm32f10x.h>
 #include "arpinit.h"
 #include "arpsample.h"
+#include "arperr.h"
 #include "biquad_filter.h"
 
 BIQUAD_STRUCT * bs;
@@ -31,6 +32,7 @@ void main (void) {
 // 		putsample(calc_biquad(bs,getsample()));
 
 		putsample(getsample());
+		flagerror(0);
 	}
 	
 	//never runs
