@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "arpfir.h"
 
 firinfo * init_fir(int * coefs, int ncoefs, int skip, int skipoff)
@@ -9,7 +10,7 @@ firinfo * init_fir(int * coefs, int ncoefs, int skip, int skipoff)
 	
 	filter->ncoefs = ncoefs;
 	filter->skip = skip;
-	filter->skipct = skipct-skipoff;
+	filter->skipct = skip-skipoff;
 	
 	filter->coefs = (int *)malloc(ncoefs * sizeof(int));
 	for (i=0; i<ncoefs; i++)
@@ -28,7 +29,7 @@ int calc_fir(firinfo * f, int x)
 {
 	int i;
 	int y;
-	int * hitr
+	int * hitr;
 	
 	f->history[f->index] = x;
 	f->index++;
@@ -39,18 +40,18 @@ int calc_fir(firinfo * f, int x)
 	
 	hitr = f->coefs;
 	
-	if (skipct == skip)
-	{
+// 	if (f->skipct == f->skip)
+// 	{
 		for (i=f->index; i<f->ncoefs; i++)
 			y += *(hitr++) * f->history[i];
 	
 		for (i=0; i<f->index; i++)
 			y += *(hitr++) * f->history[i];
 		
-		skipct = 0;
-	}
+// 		f->skipct = 0;
+// 	}
 	
-	skipct++;
+// 	f->skipct++;
 		
 	return (y>>FIR_FBITS);
 }

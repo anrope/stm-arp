@@ -7,3 +7,6 @@ extern volatile int newsample;
 
 int16_t getsample(void);
 void putsample(int32_t);
+
+int16_t * getblock(void);
+void putblock(int32_t *);

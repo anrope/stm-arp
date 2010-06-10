@@ -3,6 +3,7 @@ daccal = daccal.c
 adccal = adccal.c
 blink = blinkled.c
 biquad = biquad.c biquad_filter.c
+firtest = firtest.c arpfir.c
 
 def105 = -D STM32F10X_CL
 defstdperiph = -D USE_STDPERIPH_DRIVER
@@ -49,23 +50,33 @@ arpld = -T arp.ld
 
 mainc : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(mainc) $(startupscript) -o arp.eabi
+	$(startupscript) $(mainc) -o arp.eabi
+	
+firtest : $(arpitf) stm32f10x_conf.h
+	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
+	$(startupscript) $(firtest) -o arp.eabi -O3
 	
 biquad : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(biquad) $(startupscript) -o arp.eabi
+	$(startupscript) $(biquad) -o arp.eabi
+	
+biquads : $(arpitf) stm32f10x_conf.h
+	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(biquad) -S
+
+firtests : $(arpitf) stm32f10x_conf.h
+	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(firtest) -S -O3
 	
 adccal : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(adccal) $(startupscript) -o arp.eabi
+	$(startupscript) $(adccal) -o arp.eabi
 	
 daccal : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(daccal) $(startupscript) -o arp.eabi
+	$(startupscript) $(daccal) -o arp.eabi
 	
 blink : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(blink) $(startupscript) -o arp.eabi
+	$(startupscript) $(blink) -o arp.eabi
 	
 main-all-libs : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
