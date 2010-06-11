@@ -3,14 +3,14 @@ daccal = daccal.c
 adccal = adccal.c
 blink = blinkled.c
 biquad = biquad.c biquad_filter.c
-firtest = firtest.c arpfir.c
+firtest = firtest.c arpfirblock.c
 
 def105 = -D STM32F10X_CL
 defstdperiph = -D USE_STDPERIPH_DRIVER
 defhse = -D 'HSE_VALUE=((uint32_t)8000000)'
 defs = $(def105) $(defstdperiph) $(def8mhz)
 
-cm3root = /usr/students/apellett/stm/arp
+cm3root = /home/arp/stm/arp
 
 cmsisroot = $(cm3root)/libraries/CMSIS/CM3
 stdperiphroot = $(cm3root)/libraries/STM32F10x_StdPeriph_Driver
@@ -41,7 +41,7 @@ arpitf = $(cm3root)/arpinit.c \
 cfiles = $(incdevice)/*.c $(rccsrc) $(gpiosrc) $(miscsrc) $(adcsrc) \
 			$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc) $(arpitf)
 
-ccpath = /usr/students/apellett/stm/ctc/bin
+ccpath = /home/arp/stm/ctc/bin
 CC = $(ccpath)/arm-eabi-gcc
 
 CFLAGS = -march=armv7-m -mthumb
@@ -58,7 +58,7 @@ firtest : $(arpitf) stm32f10x_conf.h
 	
 biquad : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(biquad) -o arp.eabi
+	$(startupscript) $(biquad) -o arp.eabi -O3
 	
 biquads : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(biquad) -S

@@ -1,14 +1,16 @@
 #include <stm32f10x.h>
+#include <stdlib.h>
 #include "arpinit.h"
 #include "arpsample.h"
 #include "arperr.h"
-#include "arpfir.h"
+// #include "arpfir.h"
+#include "arpfirblock.h"
 
 firinfo * fs;
 
 int filtout;
 
-static int num_coef = 1;
+static int num_coef = 51;
 // static int num_coef = 5;
 
 static int b_coefs[] = {
@@ -28,17 +30,34 @@ static int b_coefs[] = {
 // 	16384, 16384, 16384, 16384, 16384};
 
 void main (void) {
+	int i;
+
+	int nsamp;
+	int * working;
+	int * working2;
+
 	initialize();
 			
 	
 // 	firinfo * init_fir(int * coefs, int ncoefs, int skip, int skipoff)
 	fs = init_fir(b_coefs, num_coef, 0, 0);
+
+	nsamp = getblocksize();
+
+	working = (int *)malloc(sizeof(int)*nsamp);
+	working2 = (int *)malloc(sizeof(int)*nsamp);
 	
 	while (1)
-	{		
-// 		filtout = calc_fir(fs,getsample());
-// 		putsample(filtout);
-		putsample(getsample());
+	{
+// 		putsample(getsample());
+		getblock(working);
+		calc_fir(fs, working, working2, nsamp);
+// 		for (i=0; i<nsamp; i++)
+// 		{
+// 			if (working[i] < 0)
+// 				working[i] = -working[i];
+// 		}
+		putblock(working2);
 	}
 	
 	//never runs

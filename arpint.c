@@ -1,7 +1,5 @@
 #include <stm32f10x.h>
-
-extern int cursamp;
-extern int lowerrdy;
+#include "arpint.h"
 
 void DMA1_Channel1_IRQHandler(void)
 {

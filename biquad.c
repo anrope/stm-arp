@@ -31,9 +31,9 @@ void main (void) {
 	
 	while (1)
 	{		
-// 		putsample(calc_biquad(bs,getsample()));
+		putsample(calc_biquad(bs,getsample()));
 		
-		putsample(getsample());
+// 		putsample(getsample());
 	}
 	
 	//never runs
