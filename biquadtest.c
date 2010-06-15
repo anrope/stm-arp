@@ -30,10 +30,10 @@ void main (void) {
 	bs = init_biquad(num_sections, gain, a_coefs, b_coefs);
 	
 	while (1)
-	{		
+	{
+		GPIO_SetBits(GPIOC, GPIO_Pin_6);
 		putsample(calc_biquad(bs,getsample()));
-		
-// 		putsample(getsample());
+		GPIO_ResetBits(GPIOC, GPIO_Pin_6);
 	}
 	
 	//never runs

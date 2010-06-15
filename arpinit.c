@@ -81,6 +81,13 @@ void initgpio(void)
 	
 	//Apply the settings to port c
 	GPIO_Init(GPIOC, &portc);
+
+	portc.GPIO_Pin = (GPIO_Pin_3 |
+	GPIO_Pin_6);
+	portc.GPIO_Speed = GPIO_Speed_10MHz;
+	portc.GPIO_Mode = GPIO_Mode_Out_PP;
+
+	GPIO_Init(GPIOC, &portc);
 	
 	GPIO_SetBits(GPIOC, GPIO_Pin_4 |
 	GPIO_Pin_5 |

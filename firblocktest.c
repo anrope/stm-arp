@@ -3,7 +3,7 @@
 #include "arpinit.h"
 #include "arpsample.h"
 #include "arperr.h"
-#include "arpfir.h"
+#include "arpfirblock.h"
 
 firinfo * fs;
 
@@ -42,7 +42,11 @@ void main (void) {
 	
 	while (1)
 	{
-		putsample(calc_fir(fs,getsample()));
+		getblock(working);
+		GPIO_SetBits(GPIOC, GPIO_Pin_6);
+		calc_fir(fs, working, working, nsamp);
+		GPIO_ResetBits(GPIOC, GPIO_Pin_6);
+		putblock(working);
 	}
 	
 	//never runs

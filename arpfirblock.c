@@ -48,11 +48,15 @@ void calc_fir(firinfo * f, int * inbuf, int * outbuf, int nsamp)
 		
 		hitr = f->coefs;
 
+		GPIO_SetBits(GPIOC, GPIO_Pin_3);
+
 		for (i=f->index; i<f->ncoefs; i++)
 			y += *(hitr++) * f->history[i];
 		
 		for (i=0; i<f->index; i++)
 			y += *(hitr++) * f->history[i];
+
+		GPIO_ResetBits(GPIOC, GPIO_Pin_3);
 
 // 		sb->outsamp[sb->cursamp-1] = (uint16_t)((int32_t)filtout ^ (int32_t)0xffff8000);
 

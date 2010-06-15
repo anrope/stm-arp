@@ -3,10 +3,10 @@
 #include "arpsample.h"
 #include "arperr.h"
 
-volatile int16_t adcbuf[ADCBUFLEN];
+volatile uint16_t adcbuf[ADCBUFLEN];
 volatile uint16_t dacbuf[DACBUFLEN];
 
-volatile int16_t * inbuf = &(adcbuf[ADCWAIT]);
+volatile uint16_t * inbuf = &(adcbuf[ADCWAIT]);
 volatile uint16_t * outbuf;
 
 int16_t adcsamp;
@@ -151,7 +151,8 @@ void getblock(int * working)
 
 	for (i=0; i<ADCWAIT; i++)
 	{
-		working[i] = (int16_t)((int16_t)inbuf[i] ^ (uint16_t)0x8000);
+// 		working[i] = (int16_t)((int16_t)inbuf[i] ^ (uint16_t)0x8000);
+		working[i] = ADCTOQ14(inbuf[i]);
 	}
 
 // 	return (int16_t)((int16_t)adcbuf[cursamp-1] ^ (uint16_t)0x8000);
@@ -171,7 +172,8 @@ void putblock(int * working)
 
 	for (i=0; i<ADCWAIT; i++)
 	{
-		outbuf[i] = (uint16_t)((int32_t)working[i] ^ (int32_t)0xffff8000);
+// 		outbuf[i] = (uint16_t)((int32_t)working[i] ^ (int32_t)0xffff8000);
+		outbuf[i] = Q14TODAC(working[i]);
 	}
 
 	GPIO_SetBits(GPIOC, GPIO_Pin_4);

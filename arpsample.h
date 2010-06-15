@@ -4,10 +4,16 @@
 #define ADCWAIT 50
 #define DACWAIT 50
 
+// #define ADCTOQ14(sample) ((int16_t)(((int16_t)(sample)) ^ ((uint16_t)0x8000)))
+// #define Q14TODAC(sample) ((uint16_t)(((int32_t)(sample)) ^ ((int32_t)0xffff8000)))
+
+#define ADCTOQ14(sample) ((int32_t)(sample)-32768)
+#define Q14TODAC(sample) (((sample)+32768))
+
 extern volatile int newsample;
 
 typedef struct {
-	volatile int16_t * insamp;
+	volatile uint16_t * insamp;
 	volatile uint16_t * outsamp;
 	int nsamp;
 	int cursamp;
