@@ -1,5 +1,6 @@
 #include <stm32f10x.h>
 #include "arpinit.h"
+#include "arpsample.h"
 #include "arperr.h"
 
 void initnvic(void)
@@ -159,7 +160,7 @@ void initadcdma(void)
 	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x4001244c);
 	dmainfo.DMA_MemoryBaseAddr = (uint32_t) &adcbuf;
 	dmainfo.DMA_DIR = DMA_DIR_PeripheralSRC;
-	dmainfo.DMA_BufferSize = 100;
+	dmainfo.DMA_BufferSize = ADCBUFLEN;
 	dmainfo.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dmainfo.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	dmainfo.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
@@ -185,7 +186,7 @@ void initdacdma(void)
 	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x4000740C);
 	dmainfo.DMA_MemoryBaseAddr = (uint32_t) &dacbuf;
 	dmainfo.DMA_DIR = DMA_DIR_PeripheralDST;
-	dmainfo.DMA_BufferSize = 100;
+	dmainfo.DMA_BufferSize = DACBUFLEN;
 	dmainfo.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dmainfo.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	dmainfo.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;

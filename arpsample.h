@@ -1,8 +1,8 @@
-#define ADCBUFLEN 100
-#define DACBUFLEN 100
+#define ADCBUFLEN 200
+#define DACBUFLEN 200
 
-#define ADCWAIT 50
-#define DACWAIT 50
+#define ADCWAIT 100
+#define DACWAIT 100
 
 // #define ADCTOQ14(sample) ((int16_t)(((int16_t)(sample)) ^ ((uint16_t)0x8000)))
 // #define Q14TODAC(sample) ((uint16_t)(((int32_t)(sample)) ^ ((int32_t)0xffff8000)))

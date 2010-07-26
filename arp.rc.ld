@@ -11,25 +11,6 @@ MEMORY
   flash (rx) : ORIGIN = 0x08000000, LENGTH = 256k
   option_bytes_rom (rx) : ORIGIN = 0x1FFFF800, LENGTH = 16
 }
-/**/
-
-/* stm32f105rb
-MEMORY
-{
-  ram (rwx) : ORIGIN = 0x20000000, LENGTH = 32k
-  flash (rx) : ORIGIN = 0x08000000, LENGTH = 128k
-  option_bytes_rom (rx) : ORIGIN = 0x1FFFF800, LENGTH = 16
-}
-*/
-
-/* stm32f105r8
-MEMORY
-{
-  ram (rwx) : ORIGIN = 0x20000000, LENGTH = 20k
-  flash (rx) : ORIGIN = 0x08000000, LENGTH = 64k
-  option_bytes_rom (rx) : ORIGIN = 0x1FFFF800, LENGTH = 16
-}
-*/
 
 _sheap = _ebss + 4;
 _sstack = _ebss + 4;

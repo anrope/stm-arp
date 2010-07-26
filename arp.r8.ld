@@ -4,32 +4,13 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
 ENTRY(_start)
 SEARCH_DIR("/usr/students/apellett/stm/ctc/arm-eabi/lib")
 
-/* stm32f105rc */
-MEMORY
-{
-  ram (rwx) : ORIGIN = 0x20000000, LENGTH = 64k
-  flash (rx) : ORIGIN = 0x08000000, LENGTH = 256k
-  option_bytes_rom (rx) : ORIGIN = 0x1FFFF800, LENGTH = 16
-}
-/**/
-
-/* stm32f105rb
-MEMORY
-{
-  ram (rwx) : ORIGIN = 0x20000000, LENGTH = 32k
-  flash (rx) : ORIGIN = 0x08000000, LENGTH = 128k
-  option_bytes_rom (rx) : ORIGIN = 0x1FFFF800, LENGTH = 16
-}
-*/
-
-/* stm32f105r8
+/* stm32f105r8 */
 MEMORY
 {
   ram (rwx) : ORIGIN = 0x20000000, LENGTH = 20k
   flash (rx) : ORIGIN = 0x08000000, LENGTH = 64k
   option_bytes_rom (rx) : ORIGIN = 0x1FFFF800, LENGTH = 16
 }
-*/
 
 _sheap = _ebss + 4;
 _sstack = _ebss + 4;
