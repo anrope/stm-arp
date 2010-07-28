@@ -7,6 +7,17 @@ biquadblocktest = biquadblocktest.c biquadblock_filter.c
 firtest = firtest.c arpfir.c
 firblocktest = firblocktest.c arpfirblock.c
 
+#Uncomment the 'arpld' line for
+#the device being compiled for
+#STM32F105RCT6 (256k flash / 64k ram)
+# arpld = -T arp.rc.ld
+#STM32F105RBT6 (128k flash / 32k ram)
+arpld = -T arp.rb.ld
+#STM32F105R8T6 (64k flash / 20k ram)
+# arpld = -T arp.r8.ld
+
+executable = arp
+
 def105 = -D STM32F10X_CL
 defstdperiph = -D USE_STDPERIPH_DRIVER
 defhse = -D 'HSE_VALUE=((uint32_t)8000000)'
@@ -48,52 +59,57 @@ CC = $(ccpath)/arm-eabi-gcc
 
 CFLAGS = -march=armv7-m -mthumb
 
-arpld = -T arp.ld
+objcopy = $(ccpath)/arm-eabi-objcopy
+goodsections = -j .isr_vector -j .text -j .init -j .fini -j .rodata -j .data -j .init_array -j .fini_array -j .jcr -j .bss
+objcout = -O binary
+elftobin = $(objcopy) $(objcout) $(goodsections)
 
 mainc : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(mainc) -o arp.eabi
+	$(startupscript) $(mainc) -o $(executable).eabi
 	
 firtest : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(firtest) -o arp.eabi -O3
+	$(startupscript) $(firtest) -o $(executable).eabi -O3
 
 firblocktest : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(firblocktest) -o arp.eabi -O3
+	$(startupscript) $(firblocktest) -o $(executable).eabi -O3
 
 firtests : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(firblocktest) -S -O3
 	
 biquadtest : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(biquadtest) -o arp.eabi -O3
+	$(startupscript) $(biquadtest) -o $(executable).eabi -O3
 
 biquadblocktest : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(biquadblocktest) -o arp.eabi -O3
+	$(startupscript) $(biquadblocktest) -o $(executable).eabi -O3
+
+	$(elftobin) $(executable).eabi $(executable).bin
 	
 biquadtests : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(biquadblocktest) -S -O3
 	
 adccal : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(adccal) -o arp.eabi
+	$(startupscript) $(adccal) -o $(executable).eabi
 	
 daccal : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(daccal) -o arp.eabi
+	$(startupscript) $(daccal) -o $(executable).eabi
 	
 blink : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(blink) -o arp.eabi
+	$(startupscript) $(blink) -o $(executable).eabi
 	
 main-all-libs : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(stdperiphsrc)/*.c $(startupscript) -o arp.eabi.alllibs
+	$(stdperiphsrc)/*.c $(startupscript) -o $(executable).eabi.alllibs
 
 .PHONY : clean
 clean:
-	rm arp.eabi arp.eabi.alllibs
+	rm $(executable).eabi $(executable).eabi.alllibs
 	
 #arm-eabi-strip
