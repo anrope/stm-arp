@@ -1,3 +1,10 @@
+/*
+arp/arpsample.{c,h} :
+	Defines the interface that the user will use to handle data samples. There are
+	routines for one sample at a time, as well as sample blocks. The interfaces
+	provide samples sampled at 48 kHz, and expect to be able to output at 48 kHz.
+*/
+
 #include <stm32f10x.h>
 #include <stdlib.h>
 #include "arpsample.h"
@@ -19,6 +26,24 @@ volatile int lowerrdy = 0;
 int filtout;
 uint32_t filtscaled;
 
+/*
+	getsample() returns a single sample to the user.
+
+	This routine must be called often enough to prevent
+	buffer overrun, with samples occuring at 48 kHz.
+
+	In the event of an overrun, an error LED will come
+	on (from flagerror()).
+
+	Port C, pin 8 LED will be on while working on the
+	lower half of the buffer.
+
+	Port C, pin 5 LED will be on while working on the
+	upper half of the buffer.
+
+	When both pc8 and pc5 LEDs are off (high), the
+	processor is idle.
+*/
 int32_t getsample(void)
 {
 	if (cursamp == ADCBUFLEN)
@@ -58,6 +83,11 @@ int32_t getsample(void)
 	return (int16_t)((int16_t)adcbuf[cursamp-1] ^ (uint16_t)0x8000);
 }
 
+/*
+	putsample() takes a single sample from the user
+	and places it in a buffer to be output by the
+	DAC.
+*/
 void putsample(int32_t filtout)
 {	
 // 	filtscaled = filtout ^ 0xffff8000;
@@ -69,54 +99,64 @@ void putsample(int32_t filtout)
 	GPIO_SetBits(GPIOC, GPIO_Pin_4);
 }
 
-sampleblock * prepblock(void)
-{
-	static sampleblock sblock = {&(adcbuf[ADCWAIT]),
-									&(dacbuf[ADCWAIT]),
-									ADCWAIT,
-									0};
-	sampleblock * sb = &sblock;
+// sampleblock * prepblock(void)
+// {
+// 	static sampleblock sblock = {&(adcbuf[ADCWAIT]),
+// 									&(dacbuf[ADCWAIT]),
+// 									ADCWAIT,
+// 									0};
+// 	sampleblock * sb = &sblock;
+// 
+// 	sb->cursamp = 0;
+// 	sb->nsamp = ADCWAIT;
+// 
+// 	if (sb->insamp == &(adcbuf[ADCWAIT]))
+// 	{
+// 		if (lowerrdy)
+// 		{
+// 			//error
+// 			flagerror(SAMPLE_OVERRUN_LOWER);
+// 		}
+// 		
+// 		GPIO_SetBits(GPIOC, GPIO_Pin_8);
+// 		//waiting for lower half to be ready
+// 		while (!lowerrdy);
+// 		//work on lower
+// 		sb->insamp = adcbuf;
+// 		sb->outsamp = dacbuf;
+// 	} else {
+// 		if (!lowerrdy)
+// 		{
+// 			//error
+// 			flagerror(SAMPLE_OVERRUN_UPPER);
+// 		}
+// 		
+// 		//pin 5 high while waiting for upper half to be ready
+// 		GPIO_SetBits(GPIOC, GPIO_Pin_5);
+// 		while (lowerrdy);
+// 		//work on upper
+// 		sb->insamp = &(adcbuf[ADCWAIT]);
+// 		sb->outsamp = &(dacbuf[DACWAIT]);
+// 	}
+// 	
+// 	return sb;
+// }
 
-	sb->cursamp = 0;
-	sb->nsamp = ADCWAIT;
-
-	if (sb->insamp == &(adcbuf[ADCWAIT]))
-	{
-		if (lowerrdy)
-		{
-			//error
-			flagerror(SAMPLE_OVERRUN_LOWER);
-		}
-		
-		GPIO_SetBits(GPIOC, GPIO_Pin_8);
-		//waiting for lower half to be ready
-		while (!lowerrdy);
-		//work on lower
-		sb->insamp = adcbuf;
-		sb->outsamp = dacbuf;
-	} else {
-		if (!lowerrdy)
-		{
-			//error
-			flagerror(SAMPLE_OVERRUN_UPPER);
-		}
-		
-		//pin 5 high while waiting for upper half to be ready
-		GPIO_SetBits(GPIOC, GPIO_Pin_5);
-		while (lowerrdy);
-		//work on upper
-		sb->insamp = &(adcbuf[ADCWAIT]);
-		sb->outsamp = &(dacbuf[DACWAIT]);
-	}
-	
-	return sb;
-}
-
+/*
+	Simple accessor to return block size.
+	Needed for creating a working buffer.
+*/
 int getblocksize()
 {
 	return ADCWAIT;
 }
 
+/*
+	getblock() is called by the user when the user is
+	ready to process a new block of samples. The user
+	provides a pointer to an already allocated buffer
+	that will be filled with Q14 samples.
+*/
 void getblock(int * working)
 {
 	int i;
@@ -149,15 +189,22 @@ void getblock(int * working)
 		inbuf = &(adcbuf[ADCWAIT]);
 	}
 
+	//fill the user's buffer with properly converted
+	//Q14 values
 	for (i=0; i<ADCWAIT; i++)
 	{
 // 		working[i] = (int16_t)((int16_t)inbuf[i] ^ (uint16_t)0x8000);
 		working[i] = ADCTOQ14(inbuf[i]);
 	}
-
-// 	return (int16_t)((int16_t)adcbuf[cursamp-1] ^ (uint16_t)0x8000);
 }
 
+/*
+	putblock() is called by the user when they've finished
+	processing a block and are ready for the DAC to output.
+
+	Handles converting the samples to a format the DAC
+	likes, and copies the samples to the DAC DMA's buffer.
+*/
 void putblock(int * working)
 {
 	int i;
@@ -170,6 +217,8 @@ void putblock(int * working)
 		outbuf = &(dacbuf[ADCWAIT]);
 	}
 
+	//prepare the samples for the DAC, and copy them
+	//to the DAC DMA buffer
 	for (i=0; i<ADCWAIT; i++)
 	{
 // 		outbuf[i] = (uint16_t)((int32_t)working[i] ^ (int32_t)0xffff8000);

@@ -1,3 +1,5 @@
+#add all your source (.c) files, e.g.:
+#mainc = source1.c source2.c source3.c
 mainc = main.c
 daccal = daccal.c
 adccal = adccal.c
@@ -16,12 +18,26 @@ arpld = -T arp.rb.ld
 #STM32F105R8T6 (64k flash / 20k ram)
 # arpld = -T arp.r8.ld
 
+#this sets the name of the final executable
 executable = arp
 
-def105 = -D STM32F10X_CL
+###########################################
+#don't change anything below this comment!#
+###########################################
+
+#define some macros to pass to the c preprocessor via gcc
+#to make the external libraries work properly for our chip
+
+#using a STM32 connectivity line chip
+defcl = -D STM32F10X_CL
+#using the stdperiph library
 defstdperiph = -D USE_STDPERIPH_DRIVER
+#using a high speed external oscillator at 8mHz
 defhse = -D 'HSE_VALUE=((uint32_t)8000000)'
-defs = $(def105) $(defstdperiph) $(def8mhz)
+defs = $(defcl) $(defstdperiph) $(def8mhz)
+
+#create aliases for some directories we'll be
+#referring to often
 
 cm3root = /home/arp/stm/arp
 
@@ -33,9 +49,17 @@ stdperiphsrc = $(stdperiphroot)/src
 incdevice = $(cmsisroot)/DeviceSupport/ST/STM32F10x
 inccore = $(cmsisroot)/CoreSupport
 
+#point to the startup script that is run whenever the chip
+#is powered on or coming out of a reset
+#this script does things like setting up the .bss and .data sections
+#(zero-filling the .bss, and copying ROM to RAM for .data)
+#and provide weakly-defined handlers for all interrupts
 startupscript = $(incdevice)/startup/gcc_ride7/startup_stm32f10x_cl.s
 
+#tell gcc where to look for headers for our external libraries
 cm3inc = -I$(inccore) -I$(incdevice) -I$(cm3root) -I$(stdperiphinc)
+
+#list all of the source files we'll need from external libraries
 
 miscsrc = $(stdperiphsrc)/misc.c
 rccsrc = $(stdperiphsrc)/stm32f10x_rcc.c
@@ -47,26 +71,47 @@ timsrc = $(stdperiphsrc)/stm32f10x_tim.c
 flashsrc = $(stdperiphsrc)/stm32f10x_flash.c
 
 arpitf = $(cm3root)/arpinit.c \
-			$(cm3root)/arpint.c \
-			$(cm3root)/arpsample.c \
-			$(cm3root)/arperr.c
+$(cm3root)/arpint.c \
+$(cm3root)/arpsample.c \
+$(cm3root)/arperr.c
 
 cfiles = $(incdevice)/*.c $(rccsrc) $(gpiosrc) $(miscsrc) $(adcsrc) \
-			$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc) $(arpitf)
+$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc) $(arpitf)
 
-ccpath = /home/arp/stm/ctc/bin
-CC = $(ccpath)/arm-eabi-gcc
+#set the path to our cross-toolchain
+# ccpath = /home/arp/stm/ctc/bin
+# ccpath = /home/arp/stm/ccbuild/method2/install-bng/bin
+# ccpath = /home/arp/stm/stm32dev-root/usrlol/bin
+ccpath = /home/arp/stm/rpmctc/usrlol/bin
+#set the name of the cross-compiler
+# ccname = arm-eabi-gcc
+ccname = rpm-stm32-gcc
+#set the name of our cross-toolchain's objcopy
+# objcopyname = arm-eabi-objcopy
+objcopyname = rpm-stm32-objcopy
 
+CC = $(ccpath)/$(ccname)
+objcopy = $(ccpath)/$(objcopyname)
+
+#necessary gcc flags to compile for our cortex-m3 core
 CFLAGS = -march=armv7-m -mthumb
 
-objcopy = $(ccpath)/arm-eabi-objcopy
-goodsections = -j .isr_vector -j .text -j .init -j .fini -j .rodata -j .data -j .init_array -j .fini_array -j .jcr -j .bss
+#list the sections we want to extract from the elf executable
+#to put into the binary memory image (for objcopy)
+goodsections = -j .isr_vector -j .text -j .init -j .fini -j .rodata \
+-j .data -j .init_array -j .fini_array -j .jcr -j .bss
+#tell objcopy to output a binary file (memory image)
 objcout = -O binary
 elftobin = $(objcopy) $(objcout) $(goodsections)
 
+#rule to compile source files in mainc along with the external libraries
 mainc : $(arpitf) stm32f10x_conf.h
+	#generate an elf executable
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(mainc) -o $(executable).eabi
+	$(startupscript) $(mainc) -o $(executable).elf -O3
+
+	#use objcopy to create a binary memory image from our elf executable
+	$(elftobin) $(executable).elf $(executable).bin
 	
 firtest : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
@@ -83,7 +128,7 @@ biquadtest : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(startupscript) $(biquadtest) -o $(executable).eabi -O3
 
-biquadblocktest : $(arpitf) stm32f10x_conf.h
+biquadblocktest : $(arpitf) stm32f10x_conf.h $(biquadblocktest)
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(startupscript) $(biquadblocktest) -o $(executable).eabi -O3
 
@@ -102,7 +147,7 @@ daccal : $(arpitf) stm32f10x_conf.h
 	
 blink : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
-	$(startupscript) $(blink) -o $(executable).eabi
+	$(startupscript) $(blink) -o $(executable).eabi -O3
 	
 main-all-libs : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \

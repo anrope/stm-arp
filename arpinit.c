@@ -1,8 +1,21 @@
+/*
+arp/arpinit.{c,h} :
+	Contains all of the subroutines to configure various peripherals of the stm32,
+	such as RCC, GPIO PORT{A,B,C,...}, NVIC, USB, USART, SPI, etc.
+	More information regarding configuration of these peripherals is found in the
+	CMSIS and STM32F10x_StdPeriph_Driver documentation.
+*/
+
 #include <stm32f10x.h>
 #include "arpinit.h"
 #include "arpsample.h"
 #include "arperr.h"
 
+/*
+	initnvic() configures the Nested Vector Interrupt Controller
+	(NVIC). All interrupts that are going to be used must be 
+	enabled here.
+*/
 void initnvic(void)
 {
 	NVIC_InitTypeDef nvic;
@@ -24,6 +37,13 @@ void initnvic(void)
 	NVIC_Init(&nvic);
 }
 
+/*
+	initrcc() configures the Reset and Clock Control (RCC)
+	module to enable the clocks to each peripheral.
+
+	By only clocking the necessary peripherals, less power
+	is used.
+*/	
 void initrcc(void)
 {
 	//enable peripheral clocks
@@ -43,6 +63,16 @@ void initrcc(void)
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
 }
 
+/*
+	initgpio() configures the gpio ports, controlling the
+	electrical properties of each pin (input, output, 
+	push pull, open drain, etc. See STM32 Reference Manual)
+
+	Usually pins being used by peripherals (such as USB,
+	SPI, etc.) need to be configured in a particular way
+	in the gpio registers (described in the STM32
+	Reference Manual section for each peripheral).
+*/
 void initgpio(void)
 {
 	//configure port a pin 4 (dac out 1) as an analog input
@@ -52,14 +82,6 @@ void initgpio(void)
 	porta4.GPIO_Mode = GPIO_Mode_AIN;
 	
 	GPIO_Init(GPIOA, &porta4);
-	
-	// 	//mco pin AF push-pull (PA8 pin 41)
-	// 	GPIO_InitTypeDef porta8;
-	// 	porta8.GPIO_Pin = GPIO_Pin_8;
-	// 	porta8.GPIO_Speed = GPIO_Speed_50MHz;
-	// 	porta8.GPIO_Mode = GPIO_Mode_AF_PP;
-	// 	
-	// 	GPIO_Init(GPIOA, &porta8);
 	
 	//configure port c pin 0 (adc in 10) as an analog input
 	//to avoid parasitic consumption (ref. stdperiph example)
@@ -96,6 +118,11 @@ void initgpio(void)
 	GPIO_Pin_9);
 }
 
+/*
+	initdac() configures the digital-to-analog converter
+	(DAC). Timer T6 triggers the DAC, a DMA request is made
+	for new data, and then the conversion is performed.
+*/
 void initdac(void)
 {
 	//populate dac structure
@@ -114,6 +141,14 @@ void initdac(void)
 	DAC_Cmd(DAC_Channel_1, ENABLE);
 }
 
+/*
+	initadc() configures the analog-to-digital converter
+	(ADC). When timer T3 triggers the ADC, a conversion is
+	performed. The ADC hands off the new sample to the DMA,
+	which delivers the sample to a buffer.
+
+	initadc() also runs the built-in ADC calibration.
+*/
 void initadc(void)
 {
 	//populate adc structure
@@ -122,7 +157,6 @@ void initadc(void)
 	adcinfo.ADC_ScanConvMode = DISABLE;
 	adcinfo.ADC_ContinuousConvMode = DISABLE;
 	adcinfo.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T3_TRGO;
-	// 	adcinfo.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
 	adcinfo.ADC_DataAlign = ADC_DataAlign_Left;
 	adcinfo.ADC_NbrOfChannel = 1;
 	
@@ -151,6 +185,18 @@ void initadc(void)
 	ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 }
 
+/*
+	initadcdma() configures the DMA that is used with
+	the ADC. This DMA is triggered by an ADC request.
+	The DMA takes a sample from the ADC, and brings it
+	to a buffer.
+
+	This routine also enables the half transfer and
+	transfer complete interrupts for the DMA.
+
+	The STM32 Reference Manual and StdPeriph documentation
+	have more information about the actual DMA settings.
+*/
 void initadcdma(void)
 {
 	DMA_DeInit(DMA1_Channel1);
@@ -177,6 +223,20 @@ void initadcdma(void)
 	DMA_Cmd(DMA1_Channel1, ENABLE);
 }
 
+/*
+	initdacdma() configures the DMA that is used with
+	the DAC. This DMA is triggered by a DAC request.
+	The DMA grabs a sample from a buffer, and delivers
+	it to the DAC.
+
+	The DAC has multiple input registers, each for a
+	different bit alignment. It's important to make sure
+	the correct DMA_PeripheralBaseAddr is chosen to
+	use the desired bit alignment.
+
+	The STM32 Reference Manual and StdPeriph documentation
+	have more information about the actual DMA settings.
+*/
 void initdacdma(void)
 {
 	DMA_DeInit(DMA2_Channel3);
@@ -197,12 +257,19 @@ void initdacdma(void)
 	
 	DMA_Init(DMA2_Channel3, &dmainfo);
 	
+	//these interrupts aren't actually being used.
+	//DMA2_Channel3 interrupts are disabled in the NVIC.
 	DMA_ITConfig(DMA2_Channel3, DMA_IT_TC, ENABLE);
 	DMA_ITConfig(DMA2_Channel3, DMA_IT_HT, ENABLE);
 	
 	DMA_Cmd(DMA2_Channel3, ENABLE);
 }
 
+/*
+	inittim6() configures timer 6 to roll over at a
+	frequency of 48kHz, and to trigger the DAC every
+	time it rolls over.
+*/
 void inittim6(void)
 {
 	// 	TIM_SetAutoreload(TIM6, 0xf);
@@ -224,6 +291,11 @@ void inittim6(void)
 	TIM_Cmd(TIM6, ENABLE);
 }
 
+/*
+	inittim3() configures timer 3 to roll over at a
+	frequency of 48kHz, and to trigger the ADC every
+	time it rolls over.
+*/
 void inittim3(void)
 {
 	TIM_TimeBaseInitTypeDef timinfo;
@@ -243,6 +315,11 @@ void inittim3(void)
 	TIM_Cmd(TIM3, ENABLE);
 }
 
+/*
+	cfgmco() configures port A, pin 8 to output
+	PLLCLK/2. This is useful for making sure the
+	external oscillator is behaving correctly.
+*/
 void cfgmco(void)
 {
 	//mco pin AF push-pull (PA8 pin 41)
@@ -256,6 +333,20 @@ void cfgmco(void)
 	RCC_MCOConfig(RCC_MCO_PLLCLK_Div2);
 }
 
+/*
+	cfgclock() configures the chip to use the
+	external (8 MHz) oscillator (HSE = High Speed
+	External oscillator), and to set PLLs
+	to clock SYSCLK at 72 MHz.
+
+	Before changing anything here, make sure you
+	stare at the clock tree in the STM32 Reference
+	Manual for a while.
+
+	With HSE driving the chip, HSI (High Speed
+	Internal oscillator 8MHz) needs to remain enabled
+	in order to be able to write to flash.
+*/
 void cfgclock(void)
 {
 	RCC_HSICmd(ENABLE);
@@ -316,7 +407,7 @@ void cfgclock(void)
 		
 		//configure adc prescaler to set
 		//adcclk = 12mhz (spec'd fmax = 14mhz)
-		//12mhz (/6) is closest we can get
+		//12mhz (divider = 6) is closest we can get
 		//because hclk2 = 72mhz
 		RCC_ADCCLKConfig(RCC_PCLK2_Div6);
 		
@@ -336,10 +427,15 @@ void cfgclock(void)
 		//hse and pll now, we can't disable
 		//hsi.
 		//this makes it impossible to write to
-		//flash (not totally sure why).
+		//flash.
 	}
 }
 
+/*
+	initialize() is just a wrapper function to
+	be called in user programs. It calls the init
+	functions necessary to run filters.
+*/
 void initialize(void)
 {
 	initerror();

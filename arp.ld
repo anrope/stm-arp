@@ -1,8 +1,19 @@
 /*stm32f105 dev board linker script*/
 
+/*
+OUTPUT_FORMAT() defines the BFD (binary file descriptor) format
+OUTPUT_FORMAT(default, big, little)
+*/
 OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
+/* ENTRY() defines the symbol at which to begin executing code */
 ENTRY(_start)
+/* tell ld where to look for archive libraries */
 SEARCH_DIR("/usr/students/apellett/stm/ctc/arm-eabi/lib")
+
+/*
+MEMORY{} defines the memory regions of the target device,
+and gives them an alias for use later in the linker script.
+*/
 
 /* stm32f105rc */
 MEMORY
@@ -40,8 +51,16 @@ __stack_base__ = _ebss + 4;*/
 _eheap = ORIGIN(ram) + LENGTH(ram) - 1;
 _estack = ORIGIN(ram) + LENGTH(ram) - 1;
 
+/* SECTIONS{} defines all the ELF sections we want to create */
 SECTIONS
 {
+	/*
+	set . to an initial value (0 here).
+	. (dot) is the location counter. New sections are placed at the
+	location pointed to by the location counter, and the location counter
+	is automatically moved ahead the length of the new section. It is important
+	to maintain alignment (not handled automatically by the location counter).
+	*/
 	. = SEGMENT_START("text-segment", 0);
 	
 

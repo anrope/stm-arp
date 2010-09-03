@@ -1,3 +1,11 @@
+/*
+startup_stm32f10x_cl.s :
+The startup script is run whenever the chip is powered on or coming out
+of a reset. This script configures the chip to be ready to execute C code
+(zero fills .bss section, copies values from ROM to RAM for .data section),
+and (weakly) defines all the symbols for interrupt handling routines.
+*/
+
 /**
  ******************************************************************************
  * @file    startup_stm32f10x_cl.s

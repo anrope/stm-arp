@@ -8,7 +8,7 @@ uint16_t mypin = GPIO_Pin_4;
 void SysTick_Handler (void);
 
 void main (void) {
-	SysTick_Config(SystemCoreClock / 100000);
+	SysTick_Config(SystemCoreClock / 500000);
 	
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 
@@ -19,7 +19,7 @@ void main (void) {
 						GPIO_Pin_8 |
 						GPIO_Pin_9);
 	portc.GPIO_Speed = GPIO_Speed_10MHz;
-	portc.GPIO_Mode = GPIO_Mode_Out_OD;
+	portc.GPIO_Mode = GPIO_Mode_Out_PP;
 	
 	GPIO_TypeDef *ledport;
 	ledport = GPIOC;
