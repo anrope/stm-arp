@@ -89,58 +89,11 @@ int32_t getsample(void)
 	DAC.
 */
 void putsample(int32_t filtout)
-{	
-// 	filtscaled = filtout ^ 0xffff8000;
-// 	
-// 	dacbuf[cursamp-1] = filtscaled;
-
+{
 	dacbuf[cursamp-1] = (uint16_t)((int32_t)filtout ^ (int32_t)0xffff8000);
 
 	GPIO_SetBits(GPIOC, GPIO_Pin_4);
 }
-
-// sampleblock * prepblock(void)
-// {
-// 	static sampleblock sblock = {&(adcbuf[ADCWAIT]),
-// 									&(dacbuf[ADCWAIT]),
-// 									ADCWAIT,
-// 									0};
-// 	sampleblock * sb = &sblock;
-// 
-// 	sb->cursamp = 0;
-// 	sb->nsamp = ADCWAIT;
-// 
-// 	if (sb->insamp == &(adcbuf[ADCWAIT]))
-// 	{
-// 		if (lowerrdy)
-// 		{
-// 			//error
-// 			flagerror(SAMPLE_OVERRUN_LOWER);
-// 		}
-// 		
-// 		GPIO_SetBits(GPIOC, GPIO_Pin_8);
-// 		//waiting for lower half to be ready
-// 		while (!lowerrdy);
-// 		//work on lower
-// 		sb->insamp = adcbuf;
-// 		sb->outsamp = dacbuf;
-// 	} else {
-// 		if (!lowerrdy)
-// 		{
-// 			//error
-// 			flagerror(SAMPLE_OVERRUN_UPPER);
-// 		}
-// 		
-// 		//pin 5 high while waiting for upper half to be ready
-// 		GPIO_SetBits(GPIOC, GPIO_Pin_5);
-// 		while (lowerrdy);
-// 		//work on upper
-// 		sb->insamp = &(adcbuf[ADCWAIT]);
-// 		sb->outsamp = &(dacbuf[DACWAIT]);
-// 	}
-// 	
-// 	return sb;
-// }
 
 /*
 	Simple accessor to return block size.
@@ -209,7 +162,6 @@ void putblock(int * working)
 {
 	int i;
 
-// 	dacbuf[cursamp-1] = (uint16_t)((int32_t)filtout ^ (int32_t)0xffff8000);
 	if (inbuf == adcbuf)
 	{
 		outbuf = dacbuf;
@@ -221,7 +173,6 @@ void putblock(int * working)
 	//to the DAC DMA buffer
 	for (i=0; i<ADCWAIT; i++)
 	{
-// 		outbuf[i] = (uint16_t)((int32_t)working[i] ^ (int32_t)0xffff8000);
 		outbuf[i] = Q14TODAC(working[i]);
 	}
 

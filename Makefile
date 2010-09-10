@@ -121,6 +121,8 @@ firblocktest : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(arpld) $(cfiles) \
 	$(startupscript) $(firblocktest) -o $(executable).eabi -O3
 
+	$(elftobin) $(executable).eabi $(executable).bin
+
 firtests : $(arpitf) stm32f10x_conf.h
 	$(CC) $(CFLAGS) $(defs) $(cm3inc) $(firblocktest) -S -O3
 	

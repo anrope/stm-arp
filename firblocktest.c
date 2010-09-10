@@ -44,7 +44,7 @@ void main (void) {
 	{
 		getblock(working);
 		GPIO_SetBits(GPIOC, GPIO_Pin_6);
-		calc_fir(fs, working, working, nsamp);
+// 		calc_fir(fs, working, working, nsamp);
 		GPIO_ResetBits(GPIOC, GPIO_Pin_6);
 		putblock(working);
 	}
@@ -52,12 +52,3 @@ void main (void) {
 	//never runs
 	destroy_fir(fs);
 }
-
-
-
-
-
-	
-	
-
-

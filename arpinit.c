@@ -21,7 +21,6 @@ void initnvic(void)
 	NVIC_InitTypeDef nvic;
 	
 	nvic.NVIC_IRQChannel = DMA1_Channel1_IRQn;
-	// 	nvic.NVIC_IRQChannel = TIM3_IRQn;
 	nvic.NVIC_IRQChannelPreemptionPriority = 0;
 	nvic.NVIC_IRQChannelSubPriority = 0;
 	nvic.NVIC_IRQChannelCmd = ENABLE;
@@ -29,7 +28,6 @@ void initnvic(void)
 	NVIC_Init(&nvic);
 	
 	nvic.NVIC_IRQChannel = DMA2_Channel3_IRQn;
-	// 	nvic.NVIC_IRQChannel = TIM3_IRQn;
 	nvic.NVIC_IRQChannelPreemptionPriority = 0;
 	nvic.NVIC_IRQChannelSubPriority = 0;
 	nvic.NVIC_IRQChannelCmd = DISABLE;
@@ -160,16 +158,11 @@ void initadc(void)
 	adcinfo.ADC_DataAlign = ADC_DataAlign_Left;
 	adcinfo.ADC_NbrOfChannel = 1;
 	
-	// 	void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct);	
-	// 	void DAC_Init(uint32_t DAC_Channel, DAC_InitTypeDef* DAC_InitStruct);
-	// 	void ADC_Init(ADC_TypeDef* ADCx, ADC_InitTypeDef* ADC_InitStruct);
 	//apply settings to adc 1
 	ADC_Init(ADC1, &adcinfo);
 	
-	// 	void ADC_RegularChannelConfig(ADC_TypeDef* ADCx, uint8_t ADC_Channel, uint8_t Rank, uint8_t ADC_SampleTime)
 	ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_1Cycles5);
 	
-	// 	void ADC_Cmd(ADC_TypeDef* ADCx, FunctionalState NewState);
 	ADC_Cmd(ADC1, ENABLE);
 	
 	//Do an ADC reset calibration. block until finished.
@@ -310,8 +303,6 @@ void inittim3(void)
 	
 	TIM_SelectOutputTrigger(TIM3, TIM_TRGOSource_Update);
 	
-	// 	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-	
 	TIM_Cmd(TIM3, ENABLE);
 }
 
@@ -393,15 +384,17 @@ void cfgclock(void)
 		
 		//use hse as prediv1 source
 		//hse drives pll
-		//pll output is hse x9
-		//hse = 8mhz, sysclk = 72mhz
-		RCC_PREDIV1Config(RCC_PREDIV1_Source_HSE, RCC_PREDIV1_Div1);
+		//pll output is pll2 x9
+		//hse = 25mhz, pll2 = 40mhz, sysclk = 72mhz
+		RCC_PREDIV1Config(RCC_PREDIV1_Source_PLL2, RCC_PREDIV1_Div5);
 		RCC_PLLConfig(RCC_PLLSource_PREDIV1, RCC_PLLMul_9);
 		
 		//prediv2 brings hse to pll2 and pll3
-		RCC_PREDIV2Config(RCC_PREDIV2_Div1);
-		
-		//pll2 and pll3 only use for i2s?
+		//predive = 5 for 25mhz hse
+		RCC_PREDIV2Config(RCC_PREDIV2_Div5);	
+
+		//pll3 only used for i2s?
+		//pll2 used to get 72mhz from 25mhz hse
 		RCC_PLL2Config(RCC_PLL2Mul_8);
 		RCC_PLL3Config(RCC_PLL3Mul_8);
 		
@@ -413,6 +406,10 @@ void cfgclock(void)
 		
 		//enable pll
 		RCC_PLLCmd(ENABLE);
+		RCC_PLL2Cmd(ENABLE);
+
+		//wait for pll2 to become stable
+		while (RCC_GetFlagStatus(RCC_FLAG_PLL2RDY) != SET) {}
 		
 		//wait for pll to become stable
 		while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) != SET) {}

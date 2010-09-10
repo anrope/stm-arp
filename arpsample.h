@@ -22,13 +22,6 @@ arp/arpsample.{c,h} :
 
 extern volatile int newsample;
 
-// typedef struct {
-// 	volatile uint16_t * insamp;
-// 	volatile uint16_t * outsamp;
-// 	int nsamp;
-// 	int cursamp;
-// } sampleblock;
-
 typedef struct {
 	int nsamp;
 	int * block;
