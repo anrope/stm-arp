@@ -60,8 +60,6 @@ int32_t getsample(void);
 */
 void putsample(int32_t);
 
-// sampleblock * prepblock(void);
-
 /*
 	getblock() is called by the user when the user is
 	ready to process a new block of samples. The user
