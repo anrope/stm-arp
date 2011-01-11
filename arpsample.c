@@ -11,10 +11,10 @@ arp/arpsample.{c,h} :
 #include "arperr.h"
 
 volatile uint16_t adcbuf[ADCBUFLEN];
-volatile uint16_t dacbuf[DACBUFLEN];
+volatile uint32_t dacbuf[DACBUFLEN];
 
 volatile uint16_t * inbuf = &(adcbuf[ADCWAIT]);
-volatile uint16_t * outbuf;
+volatile uint32_t * outbuf;
 
 int16_t adcsamp;
 int insamp;
@@ -179,3 +179,24 @@ void putblock(int * working)
 	GPIO_SetBits(GPIOC, GPIO_Pin_4);
 }
 
+void putblockstereo(int * chan1, int * chan2)
+{
+	int i;
+
+	if (inbuf == adcbuf)
+	{
+		outbuf = dacbuf;
+	} else {
+		outbuf = &(dacbuf[ADCWAIT]);
+	}
+
+	//prepare the samples for the DAC, and copy them
+	//to the DAC DMA buffer
+	for (i=0; i<ADCWAIT; i++)
+	{
+// 		outbuf[i] = Q14TODAC(working[i]);
+		outbuf[i] = (Q14TODAC(chan2[i])<<16 & 0xffff0000) | (Q14TODAC(chan1[i]) & 0x0000ffff); 
+	}
+
+	GPIO_SetBits(GPIOC, GPIO_Pin_4);
+}

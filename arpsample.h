@@ -76,4 +76,5 @@ void getblock(int * working);
 	likes, and copies the samples to the DAC DMA's buffer.
 */
 void putblock(int * working);
+void putblockstereo(int * chan1, int * chan2);
 #endif

@@ -12,6 +12,16 @@ arp/arpinit.{c,h} :
 #define DACCLK_CNT 1500
 #define ADCCLK_CNT 1500
 
+#define FS_48K	1500
+#define FS_24K	3000
+#define FS_8K	9000
+
+#define MONO_IN 	0
+#define STEREO_IN	1
+
+#define MONO_OUT	0
+#define STEREO_OUT	1
+
 extern volatile uint16_t adcbuf;
 extern volatile uint16_t dacbuf;
 
@@ -49,6 +59,7 @@ void initgpio(void);
 	for new data, and then the conversion is performed.
 */
 void initdac(void);
+void initdac2(void);
 
 /*
 	initadc() configures the analog-to-digital converter
@@ -88,21 +99,21 @@ void initadcdma(void);
 	The STM32 Reference Manual and StdPeriph documentation
 	have more information about the actual DMA settings.
 */
-void initdacdma(void);
+void initdacdma(int chanin);
 
 /*
 	inittim6() configures timer 6 to roll over at a
 	frequency of 48kHz, and to trigger the DAC every
 	time it rolls over.
 */
-void inittim6(void);
+void inittim6(int daccount);
 
 /*
 	inittim3() configures timer 3 to roll over at a
 	frequency of 48kHz, and to trigger the ADC every
 	time it rolls over.
 */
-void inittim3(void);
+void inittim3(int adccount);
 
 /*
 	cfgmco() configures port A, pin 8 to output
@@ -132,5 +143,5 @@ void cfgclock(void);
 	be called in user programs. It calls the init
 	functions necessary to run filters.
 */
-void initialize(void);
+void initialize(int fs, int chanin, int chanout);
 #endif

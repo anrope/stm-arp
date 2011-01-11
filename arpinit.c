@@ -73,10 +73,11 @@ void initrcc(void)
 */
 void initgpio(void)
 {
-	//configure port a pin 4 (dac out 1) as an analog input
+	//configure port a pins 4, 5 (dac out 1, dac out 2) as analog inputs
 	//to avoid parasitic consumption (ref. stdperiph example)
 	GPIO_InitTypeDef porta4;
-	porta4.GPIO_Pin = GPIO_Pin_4;
+	porta4.GPIO_Pin = (GPIO_Pin_4 |
+	GPIO_Pin_5);
 	porta4.GPIO_Mode = GPIO_Mode_AIN;
 	
 	GPIO_Init(GPIOA, &porta4);
@@ -137,6 +138,22 @@ void initdac(void)
 	
 	//enable dac
 	DAC_Cmd(DAC_Channel_1, ENABLE);
+}
+
+void initdac2(void)
+{
+	//populate dac structure
+	DAC_InitTypeDef dacinfo;
+	dacinfo.DAC_Trigger = DAC_Trigger_T6_TRGO;
+	dacinfo.DAC_WaveGeneration = DAC_WaveGeneration_None;
+	dacinfo.DAC_LFSRUnmask_TriangleAmplitude = DAC_LFSRUnmask_Bit0;
+	dacinfo.DAC_OutputBuffer = DAC_OutputBuffer_Enable;
+	
+	//apply settings to dac channel 2
+	DAC_Init(DAC_Channel_2, &dacinfo);
+	
+	//enable dac
+	DAC_Cmd(DAC_Channel_2, ENABLE);
 }
 
 /*
@@ -230,20 +247,27 @@ void initadcdma(void)
 	The STM32 Reference Manual and StdPeriph documentation
 	have more information about the actual DMA settings.
 */
-void initdacdma(void)
+void initdacdma(int chanin)
 {
 	DMA_DeInit(DMA2_Channel3);
 	
 	DMA_InitTypeDef dmainfo;
-	// 	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (DAC_BASE + DHR12R1_Offset);
-	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x4000740C);
+	if (chanin == MONO_IN)
+	{
+	// 	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (DAC_BASE + DHR12L1_Offset);
+		dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x4000740C);
+	} else if (chanin == STEREO_IN)
+	{
+		dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x40007424);
+
+	}
 	dmainfo.DMA_MemoryBaseAddr = (uint32_t) &dacbuf;
 	dmainfo.DMA_DIR = DMA_DIR_PeripheralDST;
 	dmainfo.DMA_BufferSize = DACBUFLEN;
 	dmainfo.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dmainfo.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	dmainfo.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-	dmainfo.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+	dmainfo.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
+	dmainfo.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
 	dmainfo.DMA_Mode = DMA_Mode_Circular;
 	dmainfo.DMA_Priority = DMA_Priority_High;
 	dmainfo.DMA_M2M = DMA_M2M_Disable;
@@ -263,16 +287,13 @@ void initdacdma(void)
 	frequency of 48kHz, and to trigger the DAC every
 	time it rolls over.
 */
-void inittim6(void)
-{
-	// 	TIM_SetAutoreload(TIM6, 0xf);
-	// 	TIM_SelectOutputTrigger(TIM6, TIM_TRGOSource_Update);
-	// 	TIM_Cmd(TIM6, ENABLE);
-	
+void inittim6(int daccount)
+{	
 	TIM_TimeBaseInitTypeDef timinfo;
 	timinfo.TIM_Prescaler = TIM_CKD_DIV1;
 	timinfo.TIM_CounterMode = TIM_CounterMode_Down;
-	timinfo.TIM_Period = DACCLK_CNT;
+// 	timinfo.TIM_Period = DACCLK_CNT;
+	timinfo.TIM_Period = daccount;
 	timinfo.TIM_ClockDivision = 0;
 	//repetition counter isn't used for tim6
 	timinfo.TIM_RepetitionCounter = 0;
@@ -289,12 +310,13 @@ void inittim6(void)
 	frequency of 48kHz, and to trigger the ADC every
 	time it rolls over.
 */
-void inittim3(void)
+void inittim3(int adccount)
 {
 	TIM_TimeBaseInitTypeDef timinfo;
 	timinfo.TIM_Prescaler = TIM_CKD_DIV1;
 	timinfo.TIM_CounterMode = TIM_CounterMode_Down;
-	timinfo.TIM_Period = ADCCLK_CNT;
+// 	timinfo.TIM_Period = ADCCLK_CNT;
+	timinfo.TIM_Period = adccount;
 	timinfo.TIM_ClockDivision = 0;
 	//repetition counter isn't used for tim3
 	timinfo.TIM_RepetitionCounter = 0;
@@ -433,7 +455,7 @@ void cfgclock(void)
 	be called in user programs. It calls the init
 	functions necessary to run filters.
 */
-void initialize(void)
+void initialize(int fs, int chanin, int chanout)
 {
 	initerror();
 	
@@ -442,14 +464,34 @@ void initialize(void)
 	initrcc();
 	initgpio();
 	
-	initdac();
-	initdacdma();
-	inittim6();
+	if (chanin == MONO_IN)
+	{
+		initdac();
+	} else if (chanin = STEREO_IN)
+	{
+		initdac();
+		initdac2();
+	} else
+	{
+		flagerror(DAC_CONFIG_ERROR);
+	}
+	initdacdma(chanin);
+	inittim6(fs);
 	
-	initadc();
+	if (chanout == MONO_OUT)
+	{
+		initadc();
+	} else if (chanout == STEREO_OUT)
+	{
+// 		initadcstereo();
+		initadc();
+	} else
+	{
+		flagerror(ADC_CONFIG_ERROR);
+	}
 	initadcdma();
 	initnvic();
-	inittim3();
+	inittim3(fs);
 	
 	cfgmco();
 }

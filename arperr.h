@@ -15,6 +15,8 @@ arp/arperr.{c,h} :
 #define HSE_START_FAIL 1
 #define SAMPLE_OVERRUN_LOWER 2
 #define SAMPLE_OVERRUN_UPPER 3
+#define DAC_CONFIG_ERROR 4
+#define ADC_CONFIG_ERROR 5
 
 /*
 	initerror() is called once, on boot up, to set up

@@ -1,6 +1,6 @@
 #add all your source (.c) files, e.g.:
 #mainc = source1.c source2.c source3.c
-mainc = biquadblocktest.c biquadblock_filter.c
+mainc = ./testcode/sample.c
 
 #Uncomment the 'arpldname' line for
 #the device being compiled for
@@ -67,7 +67,8 @@ dmasrc = $(stdperiphsrc)/stm32f10x_dma.c
 timsrc = $(stdperiphsrc)/stm32f10x_tim.c
 flashsrc = $(stdperiphsrc)/stm32f10x_flash.c
 
-arpitfroot = $(cm3root)/arplib
+# arpitfroot = $(cm3root)/arplib
+arpitfroot = /home/arp/stm/arp
 arpitf = $(arpitfroot)/arpinit.c \
 			$(arpitfroot)/arpint.c \
 			$(arpitfroot)/arpsample.c \
@@ -81,11 +82,14 @@ cfiles = $(incdevice)/*.c $(rccsrc) $(gpiosrc) $(miscsrc) $(adcsrc) \
 			$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc) $(arpitf)
 
 #set the path to our cross-toolchain
-ccpath = /usr/linux/arm/stm32-gcc/bin
+# ccpath = /usr/linux/arm/stm32-gcc/bin
+ccpath = /home/arp/stm/ctc/bin
 #set the name of the cross-compiler
-ccname = stm32-gcc
+# ccname = stm32-gcc
+ccname = arm-eabi-gcc
 #set the name of our cross-toolchain's objcopy
-objcopyname = stm32-objcopy
+# objcopyname = stm32-objcopy
+objcopyname = arm-eabi-objcopy
 
 CC = $(ccpath)/$(ccname)
 objcopy = $(ccpath)/$(objcopyname)
