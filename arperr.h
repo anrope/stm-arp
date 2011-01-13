@@ -18,6 +18,8 @@ arp/arperr.{c,h} :
 #define DAC_CONFIG_ERROR 4
 #define ADC_CONFIG_ERROR 5
 
+#define DEBUG_ERROR 13
+
 /*
 	initerror() is called once, on boot up, to set up
 	the global error buffer

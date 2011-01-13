@@ -151,7 +151,9 @@ void initdac2(void)
 	
 	//apply settings to dac channel 2
 	DAC_Init(DAC_Channel_2, &dacinfo);
-	
+
+// 	DAC_DMACmd(DAC_Channel_2, ENABLE);
+
 	//enable dac
 	DAC_Cmd(DAC_Channel_2, ENABLE);
 }
@@ -247,16 +249,16 @@ void initadcdma(void)
 	The STM32 Reference Manual and StdPeriph documentation
 	have more information about the actual DMA settings.
 */
-void initdacdma(int chanin)
+void initdacdma(int chanout)
 {
 	DMA_DeInit(DMA2_Channel3);
 	
 	DMA_InitTypeDef dmainfo;
-	if (chanin == MONO_IN)
+	if (chanout == MONO_OUT)
 	{
 	// 	dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (DAC_BASE + DHR12L1_Offset);
 		dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x4000740C);
-	} else if (chanin == STEREO_IN)
+	} else if (chanout == STEREO_OUT)
 	{
 		dmainfo.DMA_PeripheralBaseAddr = (uint32_t) (0x40007424);
 
@@ -464,10 +466,10 @@ void initialize(int fs, int chanin, int chanout)
 	initrcc();
 	initgpio();
 	
-	if (chanin == MONO_IN)
+	if (chanout == MONO_OUT)
 	{
 		initdac();
-	} else if (chanin = STEREO_IN)
+	} else if (chanout = STEREO_OUT)
 	{
 		initdac();
 		initdac2();
@@ -475,13 +477,13 @@ void initialize(int fs, int chanin, int chanout)
 	{
 		flagerror(DAC_CONFIG_ERROR);
 	}
-	initdacdma(chanin);
+	initdacdma(chanout);
 	inittim6(fs);
 	
-	if (chanout == MONO_OUT)
+	if (chanin == MONO_IN)
 	{
 		initadc();
-	} else if (chanout == STEREO_OUT)
+	} else if (chanin == STEREO_IN)
 	{
 // 		initadcstereo();
 		initadc();
@@ -494,4 +496,14 @@ void initialize(int fs, int chanin, int chanout)
 	inittim3(fs);
 	
 	cfgmco();
+
+// 	DAC_Cmd(DAC_Channel_1, ENABLE);
+// 	DAC_Cmd(DAC_Channel_2, ENABLE);
+// 	ADC_DMACmd(ADC1, ENABLE);
+// 	ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+// 	DMA_Cmd(DMA1_Channel1, ENABLE);
+// 	DMA_Cmd(DMA2_Channel3, ENABLE);
+// 	TIM_Cmd(TIM3, ENABLE);
+// 	TIM_Cmd(TIM6, ENABLE);
+
 }

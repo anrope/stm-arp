@@ -23,7 +23,7 @@ arp/arpinit.{c,h} :
 #define STEREO_OUT	1
 
 extern volatile uint16_t adcbuf;
-extern volatile uint16_t dacbuf;
+extern volatile uint32_t dacbuf;
 
 /*
 	initnvic() configures the Nested Vector Interrupt Controller

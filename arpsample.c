@@ -194,8 +194,7 @@ void putblockstereo(int * chan1, int * chan2)
 	//to the DAC DMA buffer
 	for (i=0; i<ADCWAIT; i++)
 	{
-// 		outbuf[i] = Q14TODAC(working[i]);
-		outbuf[i] = (Q14TODAC(chan2[i])<<16 & 0xffff0000) | (Q14TODAC(chan1[i]) & 0x0000ffff); 
+		outbuf[i] = ((Q14TODAC(chan2[i])<<16) & 0xffff0000) | (Q14TODAC(chan1[i]) & 0x0000ffff); 
 	}
 
 	GPIO_SetBits(GPIOC, GPIO_Pin_4);
