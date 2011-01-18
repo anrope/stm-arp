@@ -9,6 +9,8 @@ arp/arpinit.{c,h} :
 #ifndef __ARP_INIT__
 #define __ARP_INIT__
 
+#include <stdint.h>
+
 #define DACCLK_CNT 1500
 #define ADCCLK_CNT 1500
 
@@ -70,6 +72,7 @@ void initdac2(void);
 	initadc() also runs the built-in ADC calibration.
 */
 void initadc(void);
+void initadcstereo(void);
 
 /*
 	initadcdma() configures the DMA that is used with

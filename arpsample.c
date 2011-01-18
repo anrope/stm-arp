@@ -10,10 +10,10 @@ arp/arpsample.{c,h} :
 #include "arpsample.h"
 #include "arperr.h"
 
-volatile uint16_t adcbuf[ADCBUFLEN];
+volatile uint32_t adcbuf[ADCBUFLEN];
 volatile uint32_t dacbuf[DACBUFLEN];
 
-volatile uint16_t * inbuf = &(adcbuf[ADCWAIT]);
+volatile uint32_t * inbuf = &(adcbuf[ADCWAIT]);
 volatile uint32_t * outbuf;
 
 int16_t adcsamp;
@@ -147,9 +147,52 @@ void getblock(int * working)
 	for (i=0; i<ADCWAIT; i++)
 	{
 // 		working[i] = (int16_t)((int16_t)inbuf[i] ^ (uint16_t)0x8000);
+		//TODO: need to mask this now that adcbuf is 32 bits?
 		working[i] = ADCTOQ14(inbuf[i]);
 	}
 }
+
+void getblockstereo(int * chan1, int * chan2)
+{
+	int i;
+
+	if (inbuf == &(adcbuf[ADCWAIT]))
+	{
+		if (lowerrdy)
+		{
+			//error
+			flagerror(SAMPLE_OVERRUN_LOWER);
+		}
+		
+		GPIO_SetBits(GPIOC, GPIO_Pin_8);
+		//waiting for lower half to be ready
+		while (!lowerrdy);
+		cursamp = 0;
+		//work on lower
+		inbuf = adcbuf;
+	} else {
+		if (!lowerrdy)
+		{
+			//error
+			flagerror(SAMPLE_OVERRUN_UPPER);
+		}
+		
+		//pin 5 high while waiting for upper half to be ready
+		GPIO_SetBits(GPIOC, GPIO_Pin_5);
+		while (lowerrdy);
+		//work on upper
+		inbuf = &(adcbuf[ADCWAIT]);
+	}
+
+	//fill the user's buffer with properly converted
+	//Q14 values
+	for (i=0; i<ADCWAIT; i++)
+	{
+		chan1[i] = ADCTOQ14(inbuf[i] & 0x0000ffff);
+		chan2[i] = ADCTOQ14((inbuf[i] >> 16) & 0x0000ffff);
+	}
+}
+
 
 /*
 	putblock() is called by the user when they've finished

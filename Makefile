@@ -81,6 +81,10 @@ cm3inc = -I$(inccore) -I$(incdevice) -I$(cm3root) -I$(stdperiphinc) \
 cfiles = $(incdevice)/*.c $(rccsrc) $(gpiosrc) $(miscsrc) $(adcsrc) \
 			$(dacsrc) $(dmasrc) $(timsrc) $(flashsrc) $(arpitf)
 
+linuxcpath = /home/arp/stm/linux
+linuxcfiles = $(linuxcpath)/interface.c \
+				$(linuxcpath)/gpio.c
+
 #set the path to our cross-toolchain
 # ccpath = /usr/linux/arm/stm32-gcc/bin
 ccpath = /home/arp/stm/ctc/bin
@@ -94,8 +98,12 @@ objcopyname = arm-eabi-objcopy
 CC = $(ccpath)/$(ccname)
 objcopy = $(ccpath)/$(objcopyname)
 
+linuxCC = gcc
+
 #necessary gcc flags to compile for our cortex-m3 core
 CFLAGS = -march=armv7-m -mthumb
+
+linuxCFLAGS =
 
 #list the sections we want to extract from the elf executable
 #to put into the binary memory image (for objcopy)
@@ -111,6 +119,10 @@ mainc : $(arpitf) $(arpitfroot/stm32f10x_conf.h)
 	$(startupscript) $(mainc) -o $(executable).elf -O3
 
 	$(elftobin) $(executable).elf $(executable).bin
+
+linux : $(arpitf) $(arpitfroot/stm32f10x_conf.h)
+	$(linuxCC) $(linuxCFLAGS) $(defs) $(cm3inc) $(linuxcfiles) \
+	$(mainc) -o $(executable).elf -O3
 
 .PHONY : clean
 clean :

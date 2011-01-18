@@ -50,6 +50,7 @@ void initrcc(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
 	
 	//apb1 max clock 36mhz
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
@@ -85,7 +86,8 @@ void initgpio(void)
 	//configure port c pin 0 (adc in 10) as an analog input
 	//to avoid parasitic consumption (ref. stdperiph example)
 	GPIO_InitTypeDef portc4;
-	portc4.GPIO_Pin = GPIO_Pin_0;
+	portc4.GPIO_Pin = (GPIO_Pin_0 |
+	GPIO_Pin_2);
 	portc4.GPIO_Mode = GPIO_Mode_AIN;
 	
 	GPIO_Init(GPIOC, &portc4);
@@ -197,6 +199,56 @@ void initadc(void)
 	ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 }
 
+void initadcstereo(void)
+{
+	//populate adc structure
+	ADC_InitTypeDef adcinfo;
+	adcinfo.ADC_Mode = ADC_Mode_RegSimult;
+	adcinfo.ADC_ScanConvMode = DISABLE;
+	adcinfo.ADC_ContinuousConvMode = DISABLE;
+	adcinfo.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T3_TRGO;
+	adcinfo.ADC_DataAlign = ADC_DataAlign_Left;
+	adcinfo.ADC_NbrOfChannel = 1;
+	
+	//apply settings to adc 1
+	ADC_Init(ADC1, &adcinfo);
+
+	//adc 2 doesn't get an external trigger
+	adcinfo.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
+
+	//apply settings to adc 2
+	ADC_Init(ADC2, &adcinfo);
+	
+	//enable external trigger for adc 2
+	//this is necessary for adc 2 to act
+	//as slave, being triggered
+	//simultaneously with master adc 1
+	ADC_ExternalTrigConvCmd(ADC2, ENABLE);
+	
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_1Cycles5);
+	ADC_RegularChannelConfig(ADC2, ADC_Channel_12, 1, ADC_SampleTime_1Cycles5);
+	
+	ADC_Cmd(ADC1, ENABLE);
+	ADC_Cmd(ADC2, ENABLE);
+	
+	//Do an ADC reset calibration. block until finished.
+	//Do an ADC start calibration. block until finished.
+	ADC_ResetCalibration(ADC1);
+	while(ADC_GetResetCalibrationStatus(ADC1));
+	ADC_StartCalibration(ADC1);
+	while(ADC_GetCalibrationStatus(ADC1));
+	
+	
+	ADC_ResetCalibration(ADC2);
+	while(ADC_GetResetCalibrationStatus(ADC2));
+	ADC_StartCalibration(ADC2);
+	while(ADC_GetCalibrationStatus(ADC2));
+	
+	ADC_DMACmd(ADC1, ENABLE);
+	
+	ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+}
+
 /*
 	initadcdma() configures the DMA that is used with
 	the ADC. This DMA is triggered by an ADC request.
@@ -221,8 +273,8 @@ void initadcdma(void)
 	dmainfo.DMA_BufferSize = ADCBUFLEN;
 	dmainfo.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dmainfo.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	dmainfo.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-	dmainfo.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+	dmainfo.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
+	dmainfo.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
 	dmainfo.DMA_Mode = DMA_Mode_Circular;
 	dmainfo.DMA_Priority = DMA_Priority_High;
 	dmainfo.DMA_M2M = DMA_M2M_Disable;
@@ -485,8 +537,7 @@ void initialize(int fs, int chanin, int chanout)
 		initadc();
 	} else if (chanin == STEREO_IN)
 	{
-// 		initadcstereo();
-		initadc();
+		initadcstereo();
 	} else
 	{
 		flagerror(ADC_CONFIG_ERROR);
@@ -496,14 +547,4 @@ void initialize(int fs, int chanin, int chanout)
 	inittim3(fs);
 	
 	cfgmco();
-
-// 	DAC_Cmd(DAC_Channel_1, ENABLE);
-// 	DAC_Cmd(DAC_Channel_2, ENABLE);
-// 	ADC_DMACmd(ADC1, ENABLE);
-// 	ADC_SoftwareStartConvCmd(ADC1, ENABLE);
-// 	DMA_Cmd(DMA1_Channel1, ENABLE);
-// 	DMA_Cmd(DMA2_Channel3, ENABLE);
-// 	TIM_Cmd(TIM3, ENABLE);
-// 	TIM_Cmd(TIM6, ENABLE);
-
 }
