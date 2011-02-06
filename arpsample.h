@@ -67,6 +67,7 @@ void putsample(int32_t);
 	that will be filled with Q14 samples.
 */
 void getblock(int * working);
+void getblockstereo(int * chan1, int * chan2);
 
 /*
 	putblock() is called by the user when they've finished

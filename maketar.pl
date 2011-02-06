@@ -2,7 +2,7 @@
 
 #maketar.pl generates arplib.tar.bz2
 
-$arpdir = "/home/arp/stm/dfu/stmdfu/";
+$arpdir = "/home/arp/stm/arp/";
 @arpfiles = ("arperr.c",
 		"arperr.h",
 		"arpinit.c",
