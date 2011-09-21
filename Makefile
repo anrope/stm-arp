@@ -127,4 +127,4 @@ linux : $(arpitf) $(arpitfroot/stm32f10x_conf.h)
 .PHONY : clean
 clean :
 	rm $(executable).elf
-	rm $(executbale).bin
+	rm $(executable).bin

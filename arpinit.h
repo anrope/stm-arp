@@ -24,7 +24,7 @@ arp/arpinit.{c,h} :
 #define MONO_OUT	0
 #define STEREO_OUT	1
 
-extern volatile uint16_t adcbuf;
+extern volatile uint32_t adcbuf;
 extern volatile uint32_t dacbuf;
 
 /*

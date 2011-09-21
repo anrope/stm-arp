@@ -22,13 +22,11 @@ void DMA1_Channel1_IRQHandler(void)
 	if (DMA_GetITStatus(DMA1_IT_HT1))
 	{
 		DMA_ClearITPendingBit(DMA1_IT_HT1);
-		flagerror(14);
 		//lower half good
 		lowerrdy = 1;
 	} else if (DMA_GetITStatus(DMA1_IT_TC1))
 	{
 		DMA_ClearITPendingBit(DMA1_IT_TC1);
-		flagerror(15);
 		//upper half good
 		lowerrdy = 0;
 	} else
